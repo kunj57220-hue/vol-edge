@@ -1,0 +1,3 @@
+# Keep local Streamlit behavior stable and provide the hosted PostgreSQL driver.
+streamlit==1.66.0
+psycopg[binary]>=3.2,<4

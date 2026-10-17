@@ -1,0 +1,11 @@
+{
+  "database": "data/vol_edge.sqlite3",
+  "risk_free_rate": 0.06,
+  "dividend_yield": 0.0,
+  "trading_days_per_year": 252,
+  "fair_iv_lookback": 10,
+  "fair_iv_decay": 0.8,
+  "default_holding_days": 5,
+  "downside_iv_lookback": 50,
+  "buy_ratio_denominator_floor_iv_points": 0.000001
+}
