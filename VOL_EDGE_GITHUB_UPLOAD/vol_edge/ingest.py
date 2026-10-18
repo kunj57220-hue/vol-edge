@@ -378,12 +378,13 @@ def update_history(db_path: str | Path = "data/vol_edge.sqlite3", sessions: int 
             from .db import database_size_bytes
             report["database_size_bytes"]=database_size_bytes(storage_conn)
             size=report["database_size_bytes"] or 0
-            if size>=450_000_000:
-                report["storage_warning"]="CRITICAL: Supabase database is above 90% of the 500 MB Free limit."
-            elif size>=375_000_000:
-                report["storage_warning"]="WARNING: Supabase database is above 75% of the 500 MB Free limit."
-            elif size>=300_000_000:
-                report["storage_warning"]="NOTICE: Supabase database is above 60% of the 500 MB Free limit."
+            size_limit=int(os.getenv("VOL_EDGE_DB_SIZE_LIMIT_BYTES", "1000000000"))
+            if size>=size_limit*.9:
+                report["storage_warning"]="CRITICAL: PostgreSQL database is above 90% of its configured Free-tier storage limit."
+            elif size>=size_limit*.75:
+                report["storage_warning"]="WARNING: PostgreSQL database is above 75% of its configured Free-tier storage limit."
+            elif size>=size_limit*.6:
+                report["storage_warning"]="NOTICE: PostgreSQL database is above 60% of its configured Free-tier storage limit."
         finally:
             storage_conn.close()
     emit("Update finished",report["completed"])

@@ -1,4 +1,4 @@
-"""Database connections for local SQLite and hosted Supabase PostgreSQL."""
+"""Database connections for local SQLite and hosted PostgreSQL."""
 from __future__ import annotations
 
 import os
