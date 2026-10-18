@@ -321,7 +321,7 @@ for row in rows:
     if rv_filter=="Accelerating" and (row["RV trend"] is None or row["RV trend"]<=0): continue
     if rv_filter=="Decelerating" and (row["RV trend"] is None or row["RV trend"]>=0): continue
     display_rows.append(row)
-st.dataframe(display_rows,use_container_width=True,hide_index=True)
+st.dataframe(display_rows,width="stretch",hide_index=True)
 st.caption("Fair IV uses a 10-session EWMA (0.8 decay by default) of prior-session 20-day realized volatility from imported CM closes. Historical option IV remains separate for downside references and IV percentiles. Large returns are retained and flagged for review.")
 st.caption("Sector filters and sector-relative IV percentile are unavailable because the current database has no authoritative sector classification; no sector values are inferred.")
 st.caption("Earnings-event IV analysis is unavailable: no reliable earnings calendar or event history is stored in the current database.")
@@ -356,7 +356,7 @@ with st.expander("Stock detail and ratio breakdown"):
                     line[f"{n}-session downside"] = calc.get("buy_ratio")
                 sensitivity.append(line)
             st.markdown("**Buy Ratio sensitivity (%)**")
-            st.dataframe(sensitivity,use_container_width=True,hide_index=True)
+            st.dataframe(sensitivity,width="stretch",hide_index=True)
         hist=detail.get("History",[])
         if hist:
             st.line_chart({"ATM IV":hist})
