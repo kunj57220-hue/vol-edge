@@ -1,0 +1,43 @@
+name: Update NSE EOD data
+
+on:
+  schedule:
+    # 18:15 India Standard Time, Monday through Friday (UTC has no DST).
+    - cron: '45 12 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vol-edge-nse-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VOL_EDGE_DATABASE_URL: ${{ secrets.VOL_EDGE_DATABASE_URL }}
+    defaults:
+      run:
+        working-directory: VOL_EDGE_GITHUB_UPLOAD
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: VOL_EDGE_GITHUB_UPLOAD/requirements.txt
+      - name: Install updater dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download and import missing NSE sessions
+        run: |
+          for attempt in 1 2 3; do
+            echo "Updater attempt ${attempt} of 3"
+            python scripts/update_latest.py --sessions 90 && exit 0
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 60)); fi
+          done
+          exit 1
+      - name: Recalculate and report latest dashboard metrics
+        run: python scripts/check_cloud_metrics.py
