@@ -14,14 +14,15 @@ def main():
     conn=connect(dsn)
     try:
         asof=conn.execute("SELECT MAX(trade_date) FROM cash_eod WHERE trade_date IN (SELECT trade_date FROM fo_eod)").fetchone()[0]
-        if not asof: raise SystemExit('No paired CM/FO session is stored in Supabase yet.')
+        if not asof: raise SystemExit('No paired CM/FO session is stored in hosted PostgreSQL yet.')
         symbols=[r[0] for r in conn.execute("SELECT DISTINCT symbol FROM fo_eod WHERE trade_date=? AND instrument IN ('OPTSTK','STO') ORDER BY symbol",(asof,))]
         results=[metric(conn,s,asof,cfg) for s in symbols]
         valid=sum(r['valid'] for r in results)
         size=database_size_bytes(conn)
+        limit=int(os.getenv('VOL_EDGE_DB_SIZE_LIMIT_BYTES','1000000000'))
         print(json.dumps({'asof':asof,'symbols':len(symbols),'valid_buy_ratios':valid,
             'invalid_buy_ratios':len(symbols)-valid,'database_size_bytes':size,
-            'size_limit_bytes':500_000_000,'configured_holding_days':cfg.get('default_holding_days',5),
+            'size_limit_bytes':limit,'configured_holding_days':cfg.get('default_holding_days',5),
             'status':'ok' if valid else 'no valid ratios'},indent=2))
         return 0 if valid else 1
     finally: conn.close()
