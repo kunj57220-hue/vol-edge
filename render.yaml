@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: vol-edge
+    runtime: python
+    region: ohio
+    plan: free
+    branch: main
+    rootDir: VOL_EDGE_GITHUB_UPLOAD
+    buildCommand: python -m pip install -r requirements.txt
+    startCommand: python -m streamlit run app.py --server.address=0.0.0.0 --server.port=$PORT
+    healthCheckPath: /_stcore/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: VOL_EDGE_DB_SIZE_LIMIT_BYTES
+        value: "1000000000"
+      - key: VOL_EDGE_DATABASE_URL
+        sync: false
