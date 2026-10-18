@@ -49,7 +49,7 @@ with st.sidebar:
     except Exception as exc:
         counts={"completed":0,"failed":0,"pending":180}
         if cloud_mode:
-            st.warning(f"Hosted database status is temporarily unavailable ({type(exc).__name__}); it may be waking from sleep. Refresh in a moment or check the Supabase project status.")
+            st.warning(f"Hosted database status is temporarily unavailable ({type(exc).__name__}); it may be waking from sleep. Refresh in a moment or check the PostgreSQL provider status.")
         else:
             st.error(f"Could not read import status: {exc}")
     trade_date=st.date_input("Trade date", value=date.today())
@@ -130,17 +130,18 @@ try:
     conn=connect(db)
 except Exception as exc:
     if cloud_mode:
-        st.error(f"The hosted database is unavailable ({type(exc).__name__}). Supabase may be waking from sleep or connection settings may need attention. Refresh in a moment; the scheduled updater runs independently.")
+        st.error(f"The hosted database is unavailable ({type(exc).__name__}). The PostgreSQL service may be waking from sleep or connection settings may need attention. Refresh in a moment; the scheduled updater runs independently.")
         st.stop()
     raise
 storage_bytes=database_size_bytes(conn)
 if storage_bytes is not None:
-    storage_limit=500_000_000
+    storage_limit=int(os.getenv("VOL_EDGE_DB_SIZE_LIMIT_BYTES", "1000000000"))
     storage_percent=100*storage_bytes/storage_limit
-    st.sidebar.caption(f"Supabase database storage: {storage_bytes/1024/1024:.1f} / 500 MB ({storage_percent:.0f}%).")
-    if storage_percent>=90: st.sidebar.error("Database is near the Supabase Free storage limit. Reduce retained history before the next large import.")
-    elif storage_percent>=75: st.sidebar.warning("Database storage is approaching 500 MB; review the updater's retention setting.")
-    elif storage_percent>=60: st.sidebar.warning("Database storage passed 60% of the 500 MB free-tier limit; review growth and retention now.")
+    storage_limit_mb=storage_limit/1024/1024
+    st.sidebar.caption(f"PostgreSQL storage: {storage_bytes/1024/1024:.1f} / {storage_limit_mb:.0f} MB configured Free-tier limit ({storage_percent:.0f}%).")
+    if storage_percent>=90: st.sidebar.error("Database is near its configured Free storage limit. Reduce retained history before the next import.")
+    elif storage_percent>=75: st.sidebar.warning("Database storage is approaching its configured Free-tier limit; review retention.")
+    elif storage_percent>=60: st.sidebar.warning("Database storage passed 60% of its configured Free-tier limit; review growth and retention.")
 dates=[r[0] for r in conn.execute("SELECT DISTINCT trade_date FROM cash_eod ORDER BY trade_date DESC LIMIT 253")]
 if not dates:
     st.info("Cash-market history is empty."); st.stop()
